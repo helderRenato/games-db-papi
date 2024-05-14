@@ -1,0 +1,38 @@
+https: 
+  port: "8082"
+  host: "0.0.0.0"
+  basepath: "/"
+  keystore: 
+    type: "JKS"
+    path: "keystore/keystore-dev.jks"
+    alias: "keystore"
+
+  
+rawg-sapi: 
+  port: "8082"
+  host: "mule-worker-rawg-sapi.us-e2.cloudhub.io"
+  basepath: "/api"
+  protocol: "HTTPS"
+  client_id: "25e818e9ac6c434487e0f8c1aa7bb7c1"
+  client_secret: "${secure::rawg-sapi.client_secret}"
+  truststore: 
+    type: "JKS"
+    path: "keystore/truststore-dev.jks"
+    alias: "truststore"
+  timeout: "3000000"
+  
+  
+mongodb-sapi: 
+  port: "8082"
+  host: "mule-worker-mongodb-sapi.us-e2.cloudhub.io"
+  basepath: "/api"
+  protocol: "HTTPS"
+  client_id: "25e818e9ac6c434487e0f8c1aa7bb7c1"
+  truststore: 
+    type: "JKS"
+    path: "keystore/truststore-dev.jks"
+    alias: "truststore"
+  timeout: "3000000"
+ 
+api: 
+  id: "19477193"

@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	
+	
+	<flow name="GAMESDB-PAPI-GET-GAMES" doc:id="306a3fcb-dd51-4569-a432-11f7a9496579" >
+		<flow-ref doc:name="GET /games" doc:id="88d13244-0596-409f-beda-dc98325e0c8a" name="GETGAMES" />
+		<choice doc:name="Choice" doc:id="96423035-5928-4dcf-9f9a-db9565645958">
+			<when expression="#[not isEmpty(payload)]">
+				<flow-ref doc:name="POST /games" doc:id="7058e725-fa06-402c-a51c-78bf856fa46d" name="CREATEGAMES" />
+			</when>
+						<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="5cb90427-9c87-4f36-ad5a-980fe4a9c735">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{"message": "0 games saved in the database"}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="GAMESDB-PAPI-GET-GAMES-CATALOG" doc:id="70465032-9cab-4cd3-8b0c-a3a005ce6a5c" >
+		<set-payload value='#[%dw 2.0&#10;output text/plain&#10;---&#10;write(attributes.queryParams orderBy ((value, key) -&gt; key), "application/json")]' doc:name="queryParamsInTxt" doc:id="8b130be2-5777-400f-9c41-3c50d3380f55" />
+		<set-variable value="#[%dw 2.0&#10;output application/octet-stream&#10;import toBase64 from dw::core::Binaries&#10;---&#10;toBase64(payload as Binary)]" doc:name="queryParamsInBase64" doc:id="bd1ed793-50a3-4950-ab8b-5b0bf705892d" variableName="queryParamsInBase64"/>
+		<ee:cache doc:name="Cache" doc:id="85a86270-91c3-479e-b1cf-1afe06bef8a4" cachingStrategy-ref="Caching_Strategy_Query">
+			<http:request method="GET" doc:name="GET /games/catalog" doc:id="98cf67c5-c4f3-4d92-99f9-d75068310979" config-ref="HTTP_Request_Mongo" path="/games/catalog">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${secure::mongodb-sapi.client_secret}",
+	"client_id" : "${mongodb-sapi.client_id}"
+}]]]></http:headers>
+			<http:query-params><![CDATA[#[attributes.queryParams]]]></http:query-params>
+		</http:request>
+			<ee:transform doc:name="payload.^raw" doc:id="f1842fa8-6760-46ab-a42c-cf7b4a952a5a" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.^raw]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</ee:cache>
+		<ee:transform doc:name="java to json[]" doc:id="65fe7e7e-3c5e-450d-b235-823db1154940" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+read(payload)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="de0f71c0-097b-414b-8ccd-bd00ddfb5510" >
+			<when expression="#[isEmpty(payload)]">
+				<raise-error doc:name="Raise error (NOT FOUND)" doc:id="fc80a97e-02a8-4d04-bd0d-74838c44f4b1" type="SOURCE_RESPONSE" description="No games match your search"/>
+			</when>
+			<otherwise >
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="bf5219ab-c966-4f43-8219-2997a382724d" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="GAMESDB-PAPI-GET-GAMES-CATALOG-BY-ID" doc:id="f6ad97c3-1a9a-4d18-8f6c-46f7e3149503" >
+		<set-variable value="#[attributes.uriParams.ID]" doc:name="ID" doc:id="06e0b76e-7360-4a80-a1d9-1fe52f24f352" variableName="ID"/>
+		<ee:cache doc:name="Cache" doc:id="7caff49c-d8c4-4c37-9f03-65cd02a883af" cachingStrategy-ref="Caching_Strategy_ID">
+			<http:request method="GET" doc:name="GET /games/catalog/{ID}" doc:id="f7916e36-9576-4070-a255-a78543321fa6" config-ref="HTTP_Request_Mongo" path="/games/catalog/{ID}">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${secure::mongodb-sapi.client_secret}",
+	"client_id" : "${mongodb-sapi.client_id}"
+}]]]></http:headers>
+				<http:uri-params><![CDATA[#[{
+	"ID": vars.ID
+}]]]></http:uri-params>
+		</http:request>
+			<ee:transform doc:name="payload.^raw" doc:id="00864739-ee9a-4448-b6a2-0ded087ca33c" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload.^raw]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+		</ee:cache>
+		<ee:transform doc:name="java to json{}" doc:id="ecf0d7fc-fbde-4fa0-948e-28342d92adde" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+read(payload, "application/json")[0] default {}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="e7c22225-e68c-4bd6-a4ba-4459ea639bfc" >
+			<when expression="#[isEmpty(payload)]">
+				<raise-error doc:name="Raise error (NOT FOUND)" doc:id="4d938ebc-9444-44d4-a3a2-90ef4c98ee75" type="SOURCE_RESPONSE" description="The game with the specified ID was not found" />
+			</when>
+			<otherwise>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="955d8642-c587-47b0-a0db-de60245e496b" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="GAMESDB-PAPI-DELETE-GAMES-CATALOG-BY-ID" doc:id="1cec3ba0-3129-41f5-8710-e3b60c9ce741" >
+		<set-variable value="#[attributes.uriParams.ID]" doc:name="ID" doc:id="7c28e32a-e3e3-4d6c-a9ba-8403e759c99e" variableName="ID" />
+		<http:request method="DELETE" doc:name="DELETE /games/catalog/{ID}" doc:id="156edfbd-6b5b-4a8e-b59f-8ab47bbad0b2" config-ref="HTTP_Request_Mongo" path="/games/catalog/{ID}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${secure::mongodb-sapi.client_secret}",
+	"client_id" : "${mongodb-sapi.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[{
+	"ID": attributes.uriParams.ID
+}]]]></http:uri-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="cc86e8bb-8ea5-4836-899c-9c2c82729cdf" >
+			<when expression="#[payload.successfullOperations == 0]">
+				<raise-error doc:name="Raise error (NOT FOUND)" doc:id="e459bac9-d26f-4fca-a1be-4c98b02de204" type="SOURCE_RESPONSE" description="The game with the specified ID was not found" />
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="33fc28d1-32e5-4b51-a65e-a9af694f25f9">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json 
+---
+{"message": "The game has been successfully deleted from the database"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="GAMESDB-PAPI-PATCH-GAMES-CATALOG-BY-ID" doc:id="2f72ba7d-621e-4d7d-86df-d638e2d616f9" >
+		<set-variable value="#[attributes.uriParams.ID]" doc:name="ID" doc:id="3dbc4315-1f6b-4ef0-8364-44bbcdfbc27a" variableName="ID" />
+		<http:request method="PATCH" doc:name="PATCH /games/catalog/{ID}" doc:id="bca9ccba-00b9-49e4-b6f3-227e1ca31ddd" config-ref="HTTP_Request_Mongo" path="/games/catalog/{ID}">
+				<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${secure::mongodb-sapi.client_secret}",
+	"client_id" : "${mongodb-sapi.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[{
+	"ID": attributes.uriParams.ID
+}]]]></http:uri-params>
+		</http:request>
+		<choice doc:name="Choice" doc:id="542d9bb4-29b2-4a45-abe5-50d03e56d2b3" >
+			<when expression="#[payload.matched == 0]">
+				<raise-error doc:name="Raise error (NOT FOUND)" doc:id="61f2e93b-849f-485f-8c8d-103c0b1978ef" type="SOURCE_RESPONSE" description="The game with the specified ID was not found" />
+			</when>
+			<when expression="#[payload.modified == 0]">
+				<set-variable value="304" doc:name="httpStatus" doc:id="a789ad96-0a99-4ba4-8584-3f8f6b984277" variableName="httpStatus"/>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Transform Message" doc:id="7814dcd7-6fb3-4196-9d0b-0f05759efb71">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json 
+---
+{
+	"message": "The game has been successfully updated"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<sub-flow name="GETGAMES" doc:id="6aff50b5-cf14-4c24-8397-bfaa0acd30ea" >
+		<http:request method="GET" doc:name="GET /games" doc:id="ee3b38c6-a782-4f50-86cf-d7f6d3f438d9" config-ref="HTTP_Request_configuration" path="/games">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${rawg-sapi.client_secret}",
+	"client_id" : "${rawg-sapi.client_id}"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[attributes.queryParams]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="[results] to [games]" doc:id="ec18abae-f0db-4adb-8615-e960ebf7f22e">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload.results map {
+    "_id": $.id,
+    "name": $.name,
+    "platforms": $.platforms map $.platform.name,
+    "stores": $.stores map $.store.name,
+    "released": $.released,
+    "rating": $.rating,
+    "genres": $.genres map $.name
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<sub-flow name="CREATEGAMES" doc:id="eae9ff36-b389-4df9-a445-e484c6aacf14" >
+		<http:request method="POST" doc:name="POST /games" doc:id="cf29427f-19f3-4fcc-ba11-a7901b029f8b" config-ref="HTTP_Request_Mongo" path="/games/catalog">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${secure::mongodb-sapi.client_secret}",
+	"client_id" : "${mongodb-sapi.client_id}"
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Transform Message" doc:id="0aa47586-5ef1-44d9-9455-e884720884ce" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+
+fun getCreatedGames(array: Array) = 
+    sizeOf(array filter ((item) -> item.successful == true))
+---
+
+if( getCreatedGames(payload) == 1)  
+    {"message": getCreatedGames(payload) ++ " game saved in the database"}
+else 
+    {"message": getCreatedGames(payload) ++ " games saved in the database"}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</sub-flow>
+	<flow name="checkExpiredKeys" doc:id="cd086dbb-ba78-42da-a5ff-95d5cd8352d2" >
+		<scheduler doc:name="Scheduler" doc:id="1dc3158f-4ead-475f-8e86-19b94b5215d5" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="b520b6d8-30fb-45c9-a98e-f11de27defa2" objectStore="Object_store"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ada918a1-91ec-42e9-a012-597d16c5f35e" message='#[%dw 2.0&#10;output application/json&#10;---&#10;{&#10;	"keys": payload&#10;}]'/>
+	</flow>
+	<!--   <flow name="implementationFlow" doc:id="893c6b11-6267-4391-92f5-6c698d48b440" >
+		<http:listener doc:name="Listener" doc:id="baa20c55-d044-4d75-95e6-e7a87be033c7" config-ref="games-db-papi-httpListenerConfig" path="/teste/{ID}"/>
+		<set-variable value="#[attributes.uriParams.ID]" doc:name="ID" doc:id="f5e3c596-5372-4f5c-9655-4fcc9f814cf2" variableName="ID" />
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="ee845ae0-9d82-47c0-a9c8-6fc5fdff58a8" objectStore="Object_store"/>
+		<choice doc:name="Choice" doc:id="9788ed89-76c8-46ac-8cc1-230a6bac8bbc" >
+			<when expression="#[payload contains vars.ID]">
+				<os:retrieve doc:name="Retrieve" doc:id="9616c0fc-c913-49a4-bccc-327ad184353b" key="#[vars.ID]" objectStore="Object_store"/>
+				<flow-ref doc:name="Flow Reference" doc:id="eac6ae90-2959-4899-9436-ec45c61595c8" name="implementationSub_Flow"/>
+			</when>
+			<otherwise >
+				<http:request method="GET" doc:name="GET /games/catalog/{ID}" doc:id="63d110dd-81bb-4a92-a8c9-3a4bb8f554cc" config-ref="HTTP_Request_Mongo" path="/games/catalog/{ID}">
+				<http:uri-params><![CDATA[#[{
+	"ID": vars.ID
+}]]]></http:uri-params>
+			</http:request>
+				<os:store doc:name="Store" doc:id="e9a57e5a-9645-46b2-9a3e-083769ebdd0e" key="#[vars.ID]" objectStore="Object_store"/>
+				<flow-ref doc:name="Flow Reference" doc:id="260692de-e343-46cd-85be-e99a0b1a21f6" name="implementationSub_Flow" />
+			</otherwise>
+		</choice>
+	</flow> -->
+	<!--  <sub-flow name="implementationSub_Flow" doc:id="72ccdbe5-85ce-457a-8dd5-eda6e65f9135">
+		<choice doc:name="Choice" doc:id="150952dd-bfed-4a76-8c00-89d0baa371cc">
+			<when expression="#[isEmpty(payload)]">
+				<raise-error doc:name="Raise error (NOT FOUND)" doc:id="ffecd9e6-fce3-4ad1-b17a-55e5de6a5a0d" type="SOURCE_RESPONSE" description="The game with the specified ID was not found" />
+			</when>
+			<otherwise>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="671c690b-6328-4260-890b-31bc25430080" />
+			</otherwise>
+		</choice>
+	</sub-flow> -->
+</mule>

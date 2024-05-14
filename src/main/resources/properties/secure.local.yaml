@@ -1,0 +1,14 @@
+https:
+  keystore: 
+    password: "![NZVjUKeZNLI=]" 
+
+rawg-sapi: 
+  client_secret: "![yoVDDN4tey/8OuSAePsgT6vrVgCU13mQEoYkWek+gTlXsAcAzxi8uA==]"
+  truststore: 
+    password: "![NZVjUKeZNLI=]"
+  
+mongodb-sapi: 
+  client_secret: "![yoVDDN4tey/8OuSAePsgT6vrVgCU13mQEoYkWek+gTlXsAcAzxi8uA==]"
+  truststore: 
+    password: "![NZVjUKeZNLI=]"
+  

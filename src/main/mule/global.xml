@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mongo="http://www.mulesoft.org/schema/mule/mongo" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation=" http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd  http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/mongo http://www.mulesoft.org/schema/mule/mongo/current/mule-mongo.xsd http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
+    <apikit:config name="games-db-papi-config" api="resource::dbe242dd-74a5-4820-92ee-42d06c39528f:games-db-papi:1.0.6:raml:zip:games-db-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:listener-config name="games-db-papi-httpListenerConfig" basePath="${https.basepath}">
+        <http:listener-connection host="${https.host}" port="${https.port}" protocol="HTTPS">
+            <tls:context>
+                <tls:key-store type="${https.keystore.type}" path="${https.keystore.path}" alias="${https.keystore.alias}" keyPassword="${secure::https.keystore.password}" password="${secure::https.keystore.password}" />
+            </tls:context>
+        </http:listener-connection>
+    </http:listener-config>
+    <configuration-properties doc:name="Configuration properties" doc:id="7757dd4b-4423-4325-aed8-0288474a2791" file="properties/${env}.yaml" />
+    <global-property doc:name="Global Property" doc:id="82f09ca5-a7b8-43c1-b6a0-fbcde0ec7cf1" name="env" value="local" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="709f4925-02ea-41e7-b682-386404ee6ec9" basePath="${rawg-sapi.basepath}" responseTimeout="${rawg-sapi.timeout}">
+        <http:request-connection protocol="${rawg-sapi.protocol}" host="${rawg-sapi.host}" port="${rawg-sapi.port}">
+            <tls:context>
+                <tls:trust-store path="${rawg-sapi.truststore.path}" password="${secure::rawg-sapi.truststore.password}" type="${rawg-sapi.truststore.type}" />
+            </tls:context>
+        </http:request-connection>
+    </http:request-config>
+    <http:request-config name="HTTP_Request_Mongo" doc:name="HTTP Request configuration" doc:id="cb9cab25-66a8-4298-aece-86376d01abd0" basePath="${mongodb-sapi.basepath}" responseTimeout="${mongodb-sapi.timeout}">
+        <http:request-connection host="${mongodb-sapi.host}" port="${mongodb-sapi.port}" protocol="${mongodb-sapi.protocol}">
+            <tls:context>
+                <tls:trust-store path="${mongodb-sapi.truststore.path}" password="${secure::mongodb-sapi.truststore.password}" type="${mongodb-sapi.truststore.type}" />
+            </tls:context>
+        </http:request-connection>
+    </http:request-config>
+    <secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="a6bcd48a-dbe7-4589-91f1-93593d9a8da3" file="properties/secure.${env}.yaml" key="${secure.key}">
+        <secure-properties:encrypt algorithm="Blowfish" />
+    </secure-properties:config>
+    <configuration doc:name="Configuration" doc:id="f818b1b0-64d0-42e3-8efa-489f619ecbb1" defaultErrorHandler-ref="error_handlerError_Handler" />
+    <os:config name="ObjectStore_Config" doc:name="ObjectStore Config" doc:id="c40bdde1-f4cd-4316-bef5-1beedc409aaa">
+        <os:connection />
+    </os:config>
+    <os:object-store name="Object_store" doc:name="Object store" doc:id="ed838a26-85b9-4040-8dea-a3706d513cb1" maxEntries="100" entryTtl="20" config-ref="ObjectStore_Config" />
+    <ee:object-store-caching-strategy name="Caching_Strategy_Query" doc:name="Caching Strategy" doc:id="9bbea831-74b0-4d2e-9ec7-ca86544b5aa4" keyGenerationExpression="#[vars.queryParamsInBase64]" objectStore="Object_store" />
+    <ee:object-store-caching-strategy name="Caching_Strategy_ID" doc:name="Caching Strategy" doc:id="871ccd34-4238-48cf-bd23-6c4d122214b4" keyGenerationExpression="#[vars.id]" objectStore="Object_store" />
+	<api-gateway:autodiscovery apiId="${api.id}" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="9b2f8868-bc10-4985-b915-4ea419cfcfb4" flowRef="games-db-papi-main" />
+</mule>

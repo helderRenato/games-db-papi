@@ -1,0 +1,38 @@
+https: 
+  port: "8082"
+  host: "0.0.0.0"
+  basepath: "/"
+  keystore: 
+    type: "JKS"
+    path: "keystore/keystore-local.jks"
+    alias: "keystore"
+
+  
+rawg-sapi: 
+  port: "8081"
+  host: "localhost"
+  basepath: "/api"
+  protocol: "HTTPS"
+  client_id: "25e818e9ac6c434487e0f8c1aa7bb7c1"
+  truststore: 
+    type: "JKS"
+    path: "keystore/truststore-local.jks"
+    alias: "truststore"
+  timeout: "3000000"
+  
+  
+mongodb-sapi: 
+  port: "8083"
+  host: "localhost"
+  basepath: "/api"
+  protocol: "HTTPS"
+  client_id: "25e818e9ac6c434487e0f8c1aa7bb7c1"
+  truststore: 
+    type: "JKS"
+    path: "keystore/truststore-local.jks"
+    alias: "truststore"
+  timeout: "3000000"
+  
+api: 
+  id: "19477193"
+  

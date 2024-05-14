@@ -1,0 +1,29 @@
+%dw 2.0
+
+type auto_306a3fcb_dd51_4569_a432_11f7a9496579_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {| key: String |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|
+    dates?: String, 
+    platforms?: String, 
+    genres?: String, 
+    stores?: String, 
+    ordering?: "added" | "created" | "name" | "rating" | "metacritic" | "updated" | "released"
+  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|  |}, 
+  version: String, 
+  localAddress: String
+|}
+
