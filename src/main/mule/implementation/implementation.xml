@@ -19,6 +19,7 @@ http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/cu
 		<choice doc:name="Choice" doc:id="96423035-5928-4dcf-9f9a-db9565645958">
 			<when expression="#[not isEmpty(payload)]">
 				<flow-ref doc:name="POST /games" doc:id="7058e725-fa06-402c-a51c-78bf856fa46d" name="CREATEGAMES" />
+				<logger level="INFO" doc:name="Logger" doc:id="f5fb94e5-3e33-44b7-aa6f-5407078b8acb" message="JOGOS CRIADOS"/>
 			</when>
 						<otherwise>
 				<ee:transform doc:name="Transform Message" doc:id="5cb90427-9c87-4f36-ad5a-980fe4a9c735">
