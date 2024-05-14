@@ -27,15 +27,32 @@
 			<plugin>
 				<groupId>org.mule.tools.maven</groupId>
 				<artifactId>mule-maven-plugin</artifactId>
-				<version>${mule.maven.plugin.version}</version>
+				<version>4.1.0</version>
 				<extensions>true</extensions>
 				<configuration>
-					<sharedLibraries>
-						<sharedLibrary>
-							<groupId>org.mongodb</groupId>
-							<artifactId>mongodb-driver-legacy</artifactId>
-						</sharedLibrary>
-					</sharedLibraries>
+					<cloudHubDeployment>
+						<uri>https://anypoint.mulesoft.com</uri>
+						<muleVersion>4.6-java8</muleVersion>
+						<username>${anypoint.username}</username>
+						<password>${anypoint.password}</password>
+						<applicationName>${project.name}-1</applicationName>
+						<environment>${environment}</environment>
+						<workerType>MICRO</workerType>
+						<region>us-east-2</region>
+						<workers>1</workers>
+						<objectStoreV2>true</objectStoreV2>
+						<!-- Start: SECURED PROPERTIES CI/CD -->
+						<properties>
+							<secure.key>${decryption.key}</secure.key>
+							 <!-- Start: NON-SECURED PROPERTIES -->
+				            <env>${env}</env>
+				            <anypoint.platform.client_id>${anypoint.platform.client_id}</anypoint.platform.client_id>
+				            <anypoint.platform.client_secret>${anypoint.platform.client_secret}</anypoint.platform.client_secret>
+				            <!-- End: NON-SECURED PROPERTIES -->
+						</properties>
+						<!-- End: SECURED PROPERTIES CI/CD -->
+					</cloudHubDeployment>
+					<classifier>mule-application</classifier>
 				</configuration>
 			</plugin>
 		</plugins>
