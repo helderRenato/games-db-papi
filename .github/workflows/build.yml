@@ -135,7 +135,7 @@ jobs:
           CLIENT_ID: ${{ secrets.anypoint_platform_client_id }}
         run: |
           artifactName=$(ls *.jar | head -1)
-          mvn -X deploy -DmuleDeploy \
+          mvn -X deploy -DmuleDeploy -s .maven/settings.xml \
            -Dmule.artifact=$artifactName \
            -Danypoint.username="$USERNAME" \
            -Danypoint.password="$PASSWORD" \
